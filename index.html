@@ -62,6 +62,23 @@
         .nav-dot.active { background: #e94560; transform: scale(1.3); }
         .nav-dot:hover { background: #e94560; }
         .progress-bar { text-align: center; color: #a0a0a0; margin-top: 8px; font-size: 0.85em; }
+
+        .flashcard {
+    width: 100%;
+    max-width: 650px;
+}
+
+.shape-display {
+    width: 100%;
+    min-width: 0;
+}
+
+.shape-label {
+    max-width: 100%;
+    font-size: 0.95em;
+    padding: 10px;
+}
+
     </style>
 </head>
 <body>
@@ -129,7 +146,6 @@
     <div class="nav-dots" id="navDots"></div>
     <div class="progress-bar" id="progressBar"></div>
 
-    <script src="europe-geo.js"></script>
     <script>
 var countries = [
 {name:"Deutschland",nameCn:"德国",capital:"Berlin",capitalCn:"柏林",flagSvg:'<svg viewBox="0 0 5 3"><rect width="5" height="3" fill="#000"/><rect width="5" height="2" fill="#D00"/><rect width="5" height="1" fill="#FFCE00"/></svg>',region:"westeuropa",shapeLabel:"像一只熊"},
@@ -185,52 +201,152 @@ var countries = [
 var currentIndex = 0;
 var filteredCountries = countries.slice();
 
+// 首都坐标：[纬度, 经度]
+// 用首都标记帮助识别国家在欧洲的位置。
+var capitalLocations = {
+    "Deutschland": [52.52, 13.405],
+    "Frankreich": [48.857, 2.352],
+    "Italien": [41.903, 12.496],
+    "Spanien": [40.417, -3.704],
+    "Portugal": [38.722, -9.139],
+    "Niederlande": [52.368, 4.904],
+    "Belgien": [50.850, 4.352],
+    "Österreich": [48.208, 16.374],
+    "Schweiz": [46.948, 7.447],
+    "Polen": [52.230, 21.012],
+    "Tschechien": [50.075, 14.438],
+    "Ungarn": [47.498, 19.040],
+    "Rumänien": [44.427, 26.103],
+    "Bulgarien": [42.698, 23.322],
+    "Griechenland": [37.984, 23.728],
+    "Kroatien": [45.815, 15.982],
+    "Slowenien": [46.057, 14.506],
+    "Slowakei": [48.148, 17.107],
+    "Dänemark": [55.676, 12.568],
+    "Norwegen": [59.914, 10.752],
+    "Schweden": [59.329, 18.069],
+    "Finnland": [60.170, 24.938],
+    "Vereinigtes Königreich": [51.507, -0.128],
+    "Irland": [53.350, -6.260],
+    "Island": [64.147, -21.943],
+    "Estland": [59.437, 24.753],
+    "Lettland": [56.949, 24.105],
+    "Litauen": [54.687, 25.279],
+    "Ukraine": [50.450, 30.523],
+    "Weißrussland": [53.900, 27.566],
+    "Belarus": [53.900, 27.566],
+    "Moldau": [47.011, 28.863],
+    "Albanien": [41.328, 19.819],
+    "Nordmazedonien": [41.998, 21.426],
+    "Serbien": [44.787, 20.449],
+    "Bosnien und Herzegowina": [43.857, 18.413],
+    "Montenegro": [42.430, 19.259],
+    "Kosovo": [42.663, 21.166],
+    "Luxemburg": [49.612, 6.132],
+    "Liechtenstein": [47.141, 9.521],
+    "Monaco": [43.738, 7.425],
+    "Andorra": [42.507, 1.522],
+    "San Marino": [43.936, 12.447],
+    "Vatikanstadt": [41.902, 12.453],
+    "Vatikan": [41.902, 12.453],
+    "Malta": [35.899, 14.514],
+    "Zypern": [35.185, 33.382],
+    "Russland": [55.756, 37.617],
+    "Türkei": [39.933, 32.860],
+    "Georgien": [41.715, 44.827],
+    "Armenien": [40.187, 44.515],
+    "Aserbaidschan": [40.409, 49.867]
+};
+
 function updateCard() {
     var c = filteredCountries[currentIndex];
+    if (!c) return;
+
     document.getElementById('cardFlag').innerHTML = c.flagSvg;
     document.getElementById('countryName').textContent = c.name;
     document.getElementById('countryNameCn').textContent = c.nameCn;
     document.getElementById('capitalName').textContent = c.capital;
     document.getElementById('capitalNameCn').textContent = c.capitalCn;
+
     document.getElementById('backCountryName').textContent = c.name;
-    document.getElementById('backCapitalName').textContent = c.capital + ' (' + c.capitalCn + ')';
-    
-    var g = GEO[c.name];
-    var labelX = g.cx + 4, labelY = g.cy + 2.5, anchor = 'start';
-    if (g.cx > 60) { labelX = g.cx - 4; anchor = 'end'; }
-    if (labelY < 9) labelY = g.cy + 11;
-    if (labelY > 96) labelY = g.cy - 5;
-    document.getElementById('shapeSvg').innerHTML =
-        '<path class="country-outline" d="' + g.d + '"/>' +
-        '<circle class="capital-marker" cx="' + g.cx + '" cy="' + g.cy + '" r="2.4"/>' +
-        '<text class="capital-label" x="' + labelX + '" y="' + labelY + '" text-anchor="' + anchor + '">&#9733; ' + c.capital + '</text>';
-    document.getElementById('shapeLabel').textContent = '像 ' + c.shapeLabel;
-    document.getElementById('shapeIcon').textContent = c.shapeIcon;
-    
-    document.getElementById('memoryIcon').textContent = c.memory.icon;
-    document.getElementById('memoryText').innerHTML = c.memory.text;
+    document.getElementById('backCapitalName').textContent =
+        c.capital + ' (' + c.capitalCn + ')';
+
+    // 第一次更新时，将原来的空 SVG 换成地图容器。
+    var mapBox = document.getElementById('europeMap');
+
+    if (!mapBox) {
+        var oldSvg = document.getElementById('shapeSvg');
+
+        mapBox = document.createElement('div');
+        mapBox.id = 'europeMap';
+        mapBox.style.width = '100%';
+        mapBox.style.maxWidth = '560px';
+        mapBox.style.height = '320px';
+
+        oldSvg.replaceWith(mapBox);
+    }
+
+    mapBox.innerHTML = '';
+
+    var location = capitalLocations[c.name];
+
+    if (location) {
+        var lat = location[0];
+        var lon = location[1];
+
+        // 欧洲范围：西、南、东、北。
+        var bbox = '-25,33,55,72';
+
+        var frame = document.createElement('iframe');
+        frame.title = c.name + '：首都在欧洲的位置';
+        frame.width = '100%';
+        frame.height = '100%';
+        frame.style.border = '0';
+        frame.style.borderRadius = '8px';
+
+        frame.src =
+            'https://www.openstreetmap.org/export/embed.html' +
+            '?bbox=' + encodeURIComponent(bbox) +
+            '&layer=mapnik' +
+            '&marker=' + encodeURIComponent(lat + ',' + lon);
+
+        mapBox.appendChild(frame);
+    } else {
+        mapBox.textContent = '暂未添加该国家的首都坐标：' + c.name;
+    }
+
+    document.getElementById('shapeLabel').textContent =
+        c.nameCn + ' · 地图标记为首都位置';
+
+    // 原 HTML 中可能没有 shapeIcon，先判断再使用。
+    var shapeIcon = document.getElementById('shapeIcon');
+    if (shapeIcon) {
+        shapeIcon.textContent = c.shapeIcon || '';
+    }
+
+    // 没有记忆数据时使用默认内容，避免脚本报错。
+    var memory = c.memory || {};
+
+    document.getElementById('memoryIcon').textContent =
+        memory.icon || '📍';
+
+    var memoryText = document.getElementById('memoryText');
+
+    if (memory.text) {
+        memoryText.innerHTML = memory.text;
+    } else {
+        memoryText.textContent =
+            c.name + '（' + c.nameCn + '）的首都是 ' +
+            c.capital + '（' + c.capitalCn + '）。';
+    }
+
     updateNavDots();
-    document.getElementById('progressBar').textContent = (currentIndex + 1) + ' / ' + filteredCountries.length;
+
+    document.getElementById('progressBar').textContent =
+        (currentIndex + 1) + ' / ' + filteredCountries.length;
 }
 
-function updateNavDots() {
-    var container = document.getElementById('navDots');
-    container.innerHTML = '';
-    for (var i = 0; i < Math.min(filteredCountries.length, 47); i++) {
-        var dot = document.createElement('div');
-        dot.className = 'nav-dot' + (i === currentIndex ? ' active' : '');
-        dot.onclick = (function(index) { return function() { goToCard(index); }; })(i);
-        container.appendChild(dot);
-    }
-}
-
-function goToCard(index) {
-    if (index >= 0 && index < filteredCountries.length) {
-        currentIndex = index;
-        document.getElementById('flashcard').classList.remove('flipped');
-        updateCard();
-    }
-}
 
 function flipCard() { document.getElementById('flashcard').classList.toggle('flipped'); }
 function nextCard() { document.getElementById('flashcard').classList.remove('flipped'); currentIndex = (currentIndex + 1) % filteredCountries.length; updateCard(); }
