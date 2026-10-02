@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Europäische Länder - 德语单词卡</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #1a1a2e, #16213e); min-height: 100vh; padding: 20px; color: #333; }
+        .header { text-align: center; color: white; margin-bottom: 20px; }
+        .header h1 { font-size: 2em; background: linear-gradient(90deg, #e94560, #f39c12); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header .subtitle { color: #a0a0a0; margin-top: 5px; }
+        .controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .controls select, .controls button { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; }
+        .controls select { background: #2a2a4a; color: white; min-width: 150px; }
+        .controls button { background: linear-gradient(135deg, #e94560, #c73659); color: white; font-weight: bold; }
+        .controls button:hover { transform: translateY(-2px); }
+        .flashcard-container { display: flex; justify-content: center; perspective: 1000px; }
+        .flashcard { width: 650px; height: 780px; position: relative; transform-style: preserve-3d; transition: transform 0.6s; cursor: pointer; }
+        .flashcard.flipped { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 15px; background: white; box-shadow: 0 10px 40px rgba(0,0,0,0.3); overflow: hidden; }
+        .card-front { display: flex; flex-direction: column; }
+        .card-back { transform: rotateY(180deg); display: flex; flex-direction: column; }
+        .country-flag { height: 160px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f8f9fa, #e9ecef); }
+        .country-flag svg { width: 190px; height: 120px; border-radius: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .country-info { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; text-align: center; }
+        .country-name { font-size: 1.9em; font-weight: bold; color: #2c3e50; }
+        .country-name-cn { font-size: 1em; color: #666; margin: 5px 0 15px; }
+        .capital-name { font-size: 1.4em; color: #e94560; }
+        .capital-name-cn { font-size: 0.95em; color: #888; margin-bottom: 15px; }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .pronunciation-btn { padding: 10px 20px; background: linear-gradient(135deg, #3498db, #2980b9); color: white; border: none; border-radius: 25px; font-size: 0.95em; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.3s; }
+        .pronunciation-btn:hover { transform: scale(1.05); }
+        .pronunciation-btn.capital-btn { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .card-header { padding: 15px; background: linear-gradient(135deg, #2c3e50, #34495e); color: white; text-align: center; }
+        .card-header h2 { font-size: 1.5em; }
+        .card-header p { opacity: 0.9; margin-top: 3px; font-size: 0.95em; }
+        .map-section { flex: 1; display: flex; flex-direction: column; }
+        .map-area { padding: 15px; background: linear-gradient(135deg, #e8f4f8, #d4e8f0); display: flex; flex-direction: column; align-items: center; gap: 15px; min-height: 220px; }
+        .shape-display { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 12px; }
+        .shape-svg { width: 270px; height: 270px; }
+        .shape-svg .country-outline { fill: #5b9bd5; stroke: #1f3d5c; stroke-width: 1.2; }
+        .shape-svg .sea-bg { fill: #b8d4e8; }
+        .shape-svg .capital-marker { fill: #e74c3c; stroke: white; stroke-width: 1.2; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4)); }
+        .shape-svg .capital-label { font-size: 7px; font-weight: bold; fill: #b02218; paint-order: stroke; stroke: #ffffff; stroke-width: 2.5px; stroke-linejoin: round; }
+        .shape-label { font-size: 1em; color: #2c3e50; font-weight: bold; padding: 8px 20px; background: #fff3cd; border-radius: 8px; border: 2px solid #ffc107; }
+        .shape-label { font-size: 1.1em; color: #2c3e50; font-weight: bold; text-align: center; padding: 15px 25px; background: #fff3cd; border-radius: 10px; border: 2px solid #ffc107; }
+        .memory-section { background: linear-gradient(135deg, #fff9e6, #fff5d6); border-top: 3px solid #f39c12; padding: 12px 15px; }
+        .memory-title { font-size: 0.95em; font-weight: bold; color: #b8860b; margin-bottom: 6px; }
+        .memory-content { display: flex; align-items: center; gap: 10px; }
+        .memory-icon { font-size: 1.8em; flex-shrink: 0; }
+        .memory-text { font-size: 0.88em; color: #5d4e37; line-height: 1.5; }
+        .memory-text strong { color: #8b4513; }
+        .card-footer { padding: 10px; background: #ecf0f1; text-align: center; color: #7f8c8d; font-size: 0.8em; }
+        .hint { text-align: center; color: #a0a0a0; margin-top: 12px; font-size: 0.9em; }
+        .country-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 6px; max-width: 680px; margin: 12px auto; padding: 12px; }
+        .country-thumb { padding: 6px; background: #2a2a4a; border-radius: 6px; text-align: center; cursor: pointer; color: white; transition: all 0.3s; }
+        .country-thumb:hover { background: #3a3a5a; transform: translateY(-2px); }
+        .country-thumb .code { font-size: 0.65em; color: #a0a0a0; }
+        .nav-dots { display: flex; justify-content: center; gap: 5px; margin-top: 10px; flex-wrap: wrap; max-width: 680px; margin-left: auto; margin-right: auto; }
+        .nav-dot { width: 8px; height: 8px; border-radius: 50%; background: #3a3a5a; cursor: pointer; transition: all 0.3s; }
+        .nav-dot.active { background: #e94560; transform: scale(1.3); }
+        .nav-dot:hover { background: #e94560; }
+        .progress-bar { text-align: center; color: #a0a0a0; margin-top: 8px; font-size: 0.85em; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Europäische Länder</h1>
+        <p class="subtitle">德语小学词汇 - 47个欧洲国家</p>
+    </div>
+
+    <div class="controls">
+        <select id="regionFilter" onchange="filterCountries(this.value)">
+            <option value="all">Alle Länder</option>
+            <option value="westeuropa">Westeuropa</option>
+            <option value="osteuropa">Osteuropa</option>
+            <option value="suedeuropa">Südeuropa</option>
+            <option value="nordeuropa">Nordeuropa</option>
+        </select>
+        <button onclick="shuffleCards()">Mischen</button>
+        <button onclick="prevCard()">◀</button>
+        <button onclick="nextCard()">▶</button>
+    </div>
+
+    <div class="country-grid" id="countryGrid"></div>
+
+    <div class="flashcard-container">
+        <div class="flashcard" id="flashcard" onclick="flipCard()">
+            <div class="card-face card-front">
+                <div class="country-flag" id="cardFlag"></div>
+                <div class="country-info">
+                    <div class="country-name" id="countryName"></div>
+                    <div class="country-name-cn" id="countryNameCn"></div>
+                    <div class="capital-name" id="capitalName"></div>
+                    <div class="capital-name-cn" id="capitalNameCn"></div>
+                    <div class="btn-group">
+                        <button class="pronunciation-btn" onclick="event.stopPropagation(); speakText('country')">🔊 Land</button>
+                        <button class="pronunciation-btn capital-btn" onclick="event.stopPropagation(); speakText('capital')">🔊 Hauptstadt</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-face card-back">
+                <div class="card-header">
+                    <h2 id="backCountryName"></h2>
+                    <p>Hauptstadt: <span id="backCapitalName"></span></p>
+                </div>
+                <div class="map-section">
+                    <div class="map-area">
+                        <div class="shape-display">
+                            <svg class="shape-svg" id="shapeSvg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"></svg>
+                            <div class="shape-label" id="shapeLabel"></div>
+                        </div>
+                    </div>
+                    <div class="memory-section">
+                        <div class="memory-title">🧠 Merkhilfe · 联想记忆</div>
+                        <div class="memory-content">
+                            <span class="memory-icon" id="memoryIcon"></span>
+                            <div class="memory-text" id="memoryText"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">点击翻转 | Leertaste</div>
+            </div>
+        </div>
+    </div>
+
+    <p class="hint">← → 键盘切换 | 空格键翻转</p>
+    <div class="nav-dots" id="navDots"></div>
+    <div class="progress-bar" id="progressBar"></div>
+
+    <script src="europe-geo.js"></script>
+    <script>
+var countries = [
+{name:"Deutschland",nameCn:"德国",capital:"Berlin",capitalCn:"柏林",flagSvg:'<svg viewBox="0 0 5 3"><rect width="5" height="3" fill="#000"/><rect width="5" height="2" fill="#D00"/><rect width="5" height="1" fill="#FFCE00"/></svg>',region:"westeuropa",shapeLabel:"像一只熊"},
+{name:"Frankreich",nameCn:"法国",capital:"Paris",capitalCn:"巴黎",flagSvg:'<svg viewBox="0 0 3 2"><rect width="1" height="2" fill="#002395"/><rect x="1" width="1" height="2" fill="#FFF"/><rect x="2" width="1" height="2" fill="#ED2939"/></svg>',region:"westeuropa",shapeLabel:"像六边形"},
+{name:"Italien",nameCn:"意大利",capital:"Rom",capitalCn:"罗马",flagSvg:'<svg viewBox="0 0 3 2"><rect width="1" height="2" fill="#009246"/><rect x="1" width="1" height="2" fill="#FFF"/><rect x="2" width="1" height="2" fill="#CE2B37"/></svg>',region:"suedeuropa",shapeLabel:"像长筒靴"},
+{name:"Spanien",nameCn:"西班牙",capital:"Madrid",capitalCn:"马德里",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="1" fill="#c60b1e"/><rect y="1" width="4" height="1" fill="#ffc400"/><rect y="2" width="4" height="1" fill="#c60b1e"/></svg>',region:"suedeuropa",shapeLabel:"像长方形"},
+{name:"Portugal",nameCn:"葡萄牙",capital:"Lissabon",capitalCn:"里斯本",flagSvg:'<svg viewBox="0 0 4 3"><rect width="2" height="3" fill="#006600"/><rect x="2" width="2" height="3" fill="#FF0000"/><circle cx="1.2" cy="1.5" r="0.6" fill="#FFCC00"/></svg>',region:"suedeuropa",shapeLabel:"像长条"},
+{name:"Niederlande",nameCn:"荷兰",capital:"Amsterdam",capitalCn:"阿姆斯特丹",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="1" fill="#AE1C28"/><rect y="1" width="4" height="1" fill="#FFF"/><rect y="2" width="4" height="1" fill="#21468B"/></svg>',region:"westeuropa",shapeLabel:"像矮砖头"},
+{name:"Belgien",nameCn:"比利时",capital:"Brüssel",capitalCn:"布鲁塞尔",flagSvg:'<svg viewBox="0 0 3 2"><rect width="1" height="2" fill="#000"/><rect x="1" width="1" height="2" fill="#FAE042"/><rect x="2" width="1" height="2" fill="#ED2939"/></svg>',region:"westeuropa",shapeLabel:"像方形"},
+{name:"Österreich",nameCn:"奥地利",capital:"Wien",capitalCn:"维也纳",flagSvg:'<svg viewBox="0 0 3 2"><rect width="3" height="0.67" fill="#ED2939"/><rect y="0.67" width="3" height="0.66" fill="#FFF"/><rect y="1.33" width="3" height="0.67" fill="#ED2939"/></svg>',region:"westeuropa",shapeLabel:"像小提琴"},
+{name:"Schweiz",nameCn:"瑞士",capital:"Bern",capitalCn:"伯尔尼",flagSvg:'<svg viewBox="0 0 3 2"><rect width="3" height="2" fill="#FF0000"/><rect x="1.1" y="0.5" width="0.8" height="1" fill="#FFF"/></svg>',region:"westeuropa",shapeLabel:"像方块"},
+{name:"Polen",nameCn:"波兰",capital:"Warschau",capitalCn:"华沙",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="1.5" fill="#FFF"/><rect y="1.5" width="4" height="1.5" fill="#DC143C"/></svg>',region:"osteuropa",shapeLabel:"像海马"},
+{name:"Tschechien",nameCn:"捷克",capital:"Prag",capitalCn:"布拉格",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="1" fill="#FFF"/><rect y="1" width="4" height="1" fill="#D7141A"/><rect y="2" width="4" height="1" fill="#11457E"/></svg>',region:"osteuropa",shapeLabel:"像飞蛾"},
+{name:"Ungarn",nameCn:"匈牙利",capital:"Budapest",capitalCn:"布达佩斯",flagSvg:'<svg viewBox="0 0 3 2"><rect width="3" height="0.67" fill="#CC3434"/><rect y="0.67" width="3" height="0.66" fill="#FFF"/><rect y="1.33" width="3" height="0.67" fill="#32743E"/></svg>',region:"osteuropa",shapeLabel:"像长条"},
+{name:"Rumänien",nameCn:"罗马尼亚",capital:"Bukarest",capitalCn:"布加勒斯特",flagSvg:'<svg viewBox="0 0 3 2"><rect width="1" height="2" fill="#002B7F"/><rect x="1" width="1" height="2" fill="#FCD116"/><rect x="2" width="1" height="2" fill="#CE1126"/></svg>',region:"osteuropa",shapeLabel:"像熊头"},
+{name:"Bulgarien",nameCn:"保加利亚",capital:"Sofia",capitalCn:"索非亚",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="1" fill="#FFF"/><rect y="1" width="4" height="1" fill="#00966E"/><rect y="2" width="4" height="1" fill="#D62612"/></svg>',region:"osteuropa",shapeLabel:"像斜方"},
+{name:"Griechenland",nameCn:"希腊",capital:"Athen",capitalCn:"雅典",flagSvg:'<svg viewBox="0 0 5 4"><rect width="5" height="4" fill="#0D5EAF"/><rect width="5" height="0.5" fill="#FFF"/><rect y="1" width="5" height="0.5" fill="#FFF"/><rect y="2" width="5" height="0.5" fill="#FFF"/><rect y="3" width="5" height="0.5" fill="#FFF"/><rect width="1.5" height="1.5" fill="#FFF"/></svg>',region:"suedeuropa",shapeLabel:"像手掌"},
+{name:"Kroatien",nameCn:"克罗地亚",capital:"Zagreb",capitalCn:"萨格勒布",flagSvg:'<svg viewBox="0 0 3 2"><rect width="3" height="0.67" fill="#FF0000"/><rect y="0.67" width="3" height="0.66" fill="#FFF"/><rect y="1.33" width="3" height="0.67" fill="#00008B"/><rect x="1" y="0.67" width="1" height="0.66" fill="#FFF"/></svg>',region:"suedeuropa",shapeLabel:"像蛇"},
+{name:"Slowenien",nameCn:"斯洛文尼亚",capital:"Laibach",capitalCn:"卢布尔雅那",flagSvg:'<svg viewBox="0 0 3 2"><rect width="3" height="2" fill="#FFF"/><rect y="1.33" width="3" height="0.67" fill="#005BAA"/><rect y="0.33" width="3" height="0.67" fill="#ED1C24"/><rect x="1" y="0.67" width="1" height="0.66" fill="#005BAA"/></svg>',region:"suedeuropa",shapeLabel:"像椭圆"},
+{name:"Slowakei",nameCn:"斯洛伐克",capital:"Bratislava",capitalCn:"布拉迪斯拉发",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="1" fill="#FFF"/><rect y="1" width="4" height="1" fill="#0B4EA2"/><rect y="2" width="4" height="1" fill="#EE1C25"/><rect x="1.5" y="0.8" width="1" height="1.4" fill="#EE1C25"/></svg>',region:"osteuropa",shapeLabel:"像猫"},
+{name:"Dänemark",nameCn:"丹麦",capital:"Kopenhagen",capitalCn:"哥本哈根",flagSvg:'<svg viewBox="0 0 5 4"><rect width="5" height="4" fill="#C60C30"/><rect width="1.5" height="4" fill="#FFF"/><rect y="1.5" width="5" height="1" fill="#FFF"/></svg>',region:"nordeuropa",shapeLabel:"像J字"},
+{name:"Norwegen",nameCn:"挪威",capital:"Oslo",capitalCn:"奥斯陆",flagSvg:'<svg viewBox="0 0 5 4"><rect width="5" height="4" fill="#BA0C2F"/><rect width="1.5" height="4" fill="#FFF"/><rect y="1.5" width="5" height="1" fill="#FFF"/><rect width="0.8" height="4" fill="#00205B"/><rect y="0.8" width="5" height="0.7" fill="#00205B"/></svg>',region:"nordeuropa",shapeLabel:"像蚯蚓"},
+{name:"Schweden",nameCn:"瑞典",capital:"Stockholm",capitalCn:"斯德哥尔摩",flagSvg:'<svg viewBox="0 0 5 4"><rect width="5" height="4" fill="#006AA7"/><rect width="1" height="4" fill="#FECC00"/><rect y="1.5" width="5" height="1" fill="#FECC00"/></svg>',region:"nordeuropa",shapeLabel:"像扳手"},
+{name:"Finnland",nameCn:"芬兰",capital:"Helsinki",capitalCn:"赫尔辛基",flagSvg:'<svg viewBox="0 0 5 4"><rect width="5" height="4" fill="#FFF"/><rect width="1.5" height="4" fill="#003580"/><rect y="1.5" width="5" height="1" fill="#003580"/></svg>',region:"nordeuropa",shapeLabel:"像鸟"},
+{name:"Vereinigtes Königreich",nameCn:"英国",capital:"London",capitalCn:"伦敦",flagSvg:'<svg viewBox="0 0 5 3"><rect width="5" height="3" fill="#012169"/><path d="M0,0 L5,3 M5,0 L0,3" stroke="#FFF" stroke-width="0.5"/><path d="M2.5,0 L2.5,3 M0,1.5 L5,1.5" stroke="#C8102E" stroke-width="0.3"/></svg>',region:"westeuropa",shapeLabel:"像烤肉"},
+{name:"Irland",nameCn:"爱尔兰",capital:"Dublin",capitalCn:"都柏林",flagSvg:'<svg viewBox="0 0 3 2"><rect width="3" height="2" fill="#169B62"/><rect width="1" height="2" fill="#FFF"/><rect x="2" width="1" height="2" fill="#FF883E"/></svg>',region:"westeuropa",shapeLabel:"像鸡蛋"},
+{name:"Island",nameCn:"冰岛",capital:"Reykjavik",capitalCn:"雷克雅未克",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="3" fill="#003897"/><rect width="1.2" height="3" fill="#FFF"/><rect y="1" width="4" height="1" fill="#FFF"/><rect width="0.6" height="3" fill="#D72828"/><rect y="0.8" width="4" height="0.4" fill="#D72828"/></svg>',region:"nordeuropa",shapeLabel:"像姜饼"},
+{name:"Estland",nameCn:"爱沙尼亚",capital:"Tallinn",capitalCn:"塔林",flagSvg:'<svg viewBox="0 0 3 2"><rect width="3" height="1" fill="#0072CE"/><rect y="1" width="3" height="1" fill="#000"/><rect y="0.5" width="3" height="1" fill="#FFF"/></svg>',region:"osteuropa",shapeLabel:"像小船"},
+{name:"Lettland",nameCn:"拉脱维亚",capital:"Riga",capitalCn:"里加",flagSvg:'<svg viewBox="0 0 3 2"><rect width="3" height="1" fill="#9E3039"/><rect y="1" width="3" height="1" fill="#9E3039"/><rect y="0.5" width="3" height="1" fill="#FFF"/></svg>',region:"osteuropa",shapeLabel:"像香肠"},
+{name:"Litauen",nameCn:"立陶宛",capital:"Wilna",capitalCn:"维尔纽斯",flagSvg:'<svg viewBox="0 0 3 2"><rect width="3" height="1" fill="#C1272D"/><rect y="1" width="3" height="1" fill="#006A4D"/><rect y="0.5" width="3" height="1" fill="#FDB913"/></svg>',region:"osteuropa",shapeLabel:"像爱心"},
+{name:"Ukraine",nameCn:"乌克兰",capital:"Kiew",capitalCn:"基辅",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="1.5" fill="#005BBB"/><rect y="1.5" width="4" height="1.5" fill="#FFD500"/></svg>',region:"osteuropa",shapeLabel:"像斜砖"},
+{name:"Weißrussland",nameCn:"白俄罗斯",capital:"Minsk",capitalCn:"明斯克",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="1" fill="#D42B2B"/><rect y="1" width="4" height="1" fill="#007047"/><rect y="2" width="4" height="1" fill="#FFF"/></svg>',region:"osteuropa",shapeLabel:"像蛋糕"},
+{name:"Moldau",nameCn:"摩尔多瓦",capital:"Chișinău",capitalCn:"基希讷乌",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="1" fill="#003580"/><rect y="1" width="4" height="1" fill="#FFCC00"/><rect y="2" width="4" height="1" fill="#C1272D"/></svg>',region:"osteuropa",shapeLabel:"像葡萄"},
+{name:"Albanien",nameCn:"阿尔巴尼亚",capital:"Tirana",capitalCn:"地拉那",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="3" fill="#E41E20"/><path d="M2,0.5 L2,2.5 M0.5,1.5 L3.5,1.5" stroke="#E41E20" stroke-width="0.3" fill="none"/></svg>',region:"suedeuropa",shapeLabel:"像老鹰"},
+{name:"Nordmazedonien",nameCn:"北马其顿",capital:"Skopje",capitalCn:"斯科普里",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="3" fill="#D20000"/><circle cx="2" cy="1.5" r="0.8" fill="#FFE600"/></svg>',region:"suedeuropa",shapeLabel:"像乌龟"},
+{name:"Serbien",nameCn:"塞尔维亚",capital:"Belgrad",capitalCn:"贝尔格莱德",flagSvg:'<svg viewBox="0 0 3 2"><rect width="3" height="0.5" fill="#0C4076"/><rect y="0.5" width="3" height="0.5" fill="#C6363C"/><rect y="1" width="3" height="0.5" fill="#FFF"/><rect y="1.5" width="3" height="0.5" fill="#C6363C"/></svg>',region:"suedeuropa",shapeLabel:"像蝴蝶"},
+{name:"Bosnien und Herzegowina",nameCn:"波黑",capital:"Sarajevo",capitalCn:"萨拉热窝",flagSvg:'<svg viewBox="0 0 3 2"><rect width="3" height="1" fill="#002395"/><rect y="1" width="3" height="1" fill="#FFCC00"/><path d="M0,2 L1.5,0 L3,2" fill="#FFF"/></svg>',region:"suedeuropa",shapeLabel:"像恐龙"},
+{name:"Montenegro",nameCn:"黑山",capital:"Podgorica",capitalCn:"波德戈里察",flagSvg:'<svg viewBox="0 0 3 2"><rect width="3" height="2" fill="#C6363C"/><path d="M0,0 L3,2 M0,2 L3,0" stroke="#D4A017" stroke-width="0.15"/></svg>',region:"suedeuropa",shapeLabel:"像爪子"},
+{name:"Kosovo",nameCn:"科索沃",capital:"Pristina",capitalCn:"普里什蒂纳",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="3" fill="#0C4076"/><rect x="1.5" y="0.8" width="1" height="1.4" fill="#D4A017"/></svg>',region:"suedeuropa",shapeLabel:"像星星"},
+{name:"Luxemburg",nameCn:"卢森堡",capital:"Luxemburg",capitalCn:"卢森堡",flagSvg:'<svg viewBox="0 0 3 2"><rect width="3" height="1" fill="#ED2939"/><rect y="1" width="3" height="1" fill="#00A1DE"/><rect y="0.5" width="3" height="1" fill="#FFF"/></svg>',region:"westeuropa",shapeLabel:"像方块"},
+{name:"Andorra",nameCn:"安道尔",capital:"Andorra la Vella",capitalCn:"安道尔城",flagSvg:'<svg viewBox="0 0 3 2"><rect width="3" height="1" fill="#0033A0"/><rect y="1" width="3" height="1" fill="#FCD116"/><rect y="0.5" width="3" height="1" fill="#C60B1E"/></svg>',region:"suedeuropa",shapeLabel:"像三角"},
+{name:"Monaco",nameCn:"摩纳哥",capital:"Monaco",capitalCn:"摩纳哥",flagSvg:'<svg viewBox="0 0 3 2"><rect width="3" height="2" fill="#C60B1E"/><rect x="0.5" y="0.5" width="2" height="1" fill="#FFF"/></svg>',region:"westeuropa",shapeLabel:"像椭圆"},
+{name:"San Marino",nameCn:"圣马力诺",capital:"San Marino",capitalCn:"圣马力诺",flagSvg:'<svg viewBox="0 0 3 2"><rect width="3" height="0.67" fill="#0073CE"/><rect y="0.67" width="3" height="0.66" fill="#FFF"/><rect y="1.33" width="3" height="0.67" fill="#0073CE"/></svg>',region:"suedeuropa",shapeLabel:"像三角山"},
+{name:"Vatikanstadt",nameCn:"梵蒂冈",capital:"Vatikanstadt",capitalCn:"梵蒂冈城",flagSvg:'<svg viewBox="0 0 3 2"><rect width="1.5" height="2" fill="#FFF"/><rect x="1.5" width="1.5" height="2" fill="#FF0000"/><rect x="1.1" y="0.3" width="0.8" height="1.4" fill="#FF0000"/></svg>',region:"suedeuropa",shapeLabel:"像正方"},
+{name:"Malta",nameCn:"马耳他",capital:"Valletta",capitalCn:"瓦莱塔",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="3" fill="#CF142B"/><rect x="1.5" width="1" height="3" fill="#FFF"/><rect y="1" width="4" height="1" fill="#FFF"/></svg>',region:"suedeuropa",shapeLabel:"像蝴蝶结"},
+{name:"Zypern",nameCn:"塞浦路斯",capital:"Nikosia",capitalCn:"尼科西亚",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="3" fill="#FFF"/><rect width="4" height="3" fill="none" stroke="#D20000" stroke-width="0.2"/></svg>',region:"suedeuropa",shapeLabel:"像手指"},
+{name:"Türkei",nameCn:"土耳其",capital:"Ankara",capitalCn:"安卡拉",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="3" fill="#E30A17"/><circle cx="1.8" cy="1.5" r="0.8" fill="#FFF"/><circle cx="2" cy="1.5" r="0.6" fill="#E30A17"/></svg>',region:"suedeuropa",shapeLabel:"像海马"},
+{name:"Georgien",nameCn:"格鲁吉亚",capital:"Tiflis",capitalCn:"第比利斯",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="3" fill="#FFF"/><rect width="4" height="3" fill="none" stroke="#D20000" stroke-width="0.15"/><path d="M2,0.5 L2,2.5 M0.5,1.5 L3.5,1.5" stroke="#D20000" stroke-width="0.1"/></svg>',region:"osteuropa",shapeLabel:"像勺子"},
+{name:"Armenien",nameCn:"亚美尼亚",capital:"Jerevan",capitalCn:"埃里温",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="3" fill="#D90012"/><circle cx="2" cy="1.5" r="0.7" fill="#FFD500"/></svg>',region:"osteuropa",shapeLabel:"像兔耳"},
+{name:"Aserbaidschan",nameCn:"阿塞拜疆",capital:"Baku",capitalCn:"巴库",flagSvg:'<svg viewBox="0 0 4 3"><rect width="4" height="1" fill="#00A0B6"/><rect y="1" width="4" height="1" fill="#EF3340"/><rect y="2" width="4" height="1" fill="#212F3D"/></svg>',region:"osteuropa",shapeLabel:"像弯饼"}
+];
+
+var currentIndex = 0;
+var filteredCountries = countries.slice();
+
+function updateCard() {
+    var c = filteredCountries[currentIndex];
+    document.getElementById('cardFlag').innerHTML = c.flagSvg;
+    document.getElementById('countryName').textContent = c.name;
+    document.getElementById('countryNameCn').textContent = c.nameCn;
+    document.getElementById('capitalName').textContent = c.capital;
+    document.getElementById('capitalNameCn').textContent = c.capitalCn;
+    document.getElementById('backCountryName').textContent = c.name;
+    document.getElementById('backCapitalName').textContent = c.capital + ' (' + c.capitalCn + ')';
+    
+    var g = GEO[c.name];
+    var labelX = g.cx + 4, labelY = g.cy + 2.5, anchor = 'start';
+    if (g.cx > 60) { labelX = g.cx - 4; anchor = 'end'; }
+    if (labelY < 9) labelY = g.cy + 11;
+    if (labelY > 96) labelY = g.cy - 5;
+    document.getElementById('shapeSvg').innerHTML =
+        '<path class="country-outline" d="' + g.d + '"/>' +
+        '<circle class="capital-marker" cx="' + g.cx + '" cy="' + g.cy + '" r="2.4"/>' +
+        '<text class="capital-label" x="' + labelX + '" y="' + labelY + '" text-anchor="' + anchor + '">&#9733; ' + c.capital + '</text>';
+    document.getElementById('shapeLabel').textContent = '像 ' + c.shapeLabel;
+    document.getElementById('shapeIcon').textContent = c.shapeIcon;
+    
+    document.getElementById('memoryIcon').textContent = c.memory.icon;
+    document.getElementById('memoryText').innerHTML = c.memory.text;
+    updateNavDots();
+    document.getElementById('progressBar').textContent = (currentIndex + 1) + ' / ' + filteredCountries.length;
+}
+
+function updateNavDots() {
+    var container = document.getElementById('navDots');
+    container.innerHTML = '';
+    for (var i = 0; i < Math.min(filteredCountries.length, 47); i++) {
+        var dot = document.createElement('div');
+        dot.className = 'nav-dot' + (i === currentIndex ? ' active' : '');
+        dot.onclick = (function(index) { return function() { goToCard(index); }; })(i);
+        container.appendChild(dot);
+    }
+}
+
+function goToCard(index) {
+    if (index >= 0 && index < filteredCountries.length) {
+        currentIndex = index;
+        document.getElementById('flashcard').classList.remove('flipped');
+        updateCard();
+    }
+}
+
+function flipCard() { document.getElementById('flashcard').classList.toggle('flipped'); }
+function nextCard() { document.getElementById('flashcard').classList.remove('flipped'); currentIndex = (currentIndex + 1) % filteredCountries.length; updateCard(); }
+function prevCard() { document.getElementById('flashcard').classList.remove('flipped'); currentIndex = (currentIndex - 1 + filteredCountries.length) % filteredCountries.length; updateCard(); }
+
+function shuffleCards() {
+    for (var i = filteredCountries.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = filteredCountries[i];
+        filteredCountries[i] = filteredCountries[j];
+        filteredCountries[j] = temp;
+    }
+    currentIndex = 0;
+    document.getElementById('flashcard').classList.remove('flipped');
+    updateCard();
+    updateCountryGrid();
+}
+
+function filterCountries(region) {
+    if (region === 'all') filteredCountries = countries.slice();
+    else filteredCountries = countries.filter(function(c) { return c.region === region; });
+    currentIndex = 0;
+    document.getElementById('flashcard').classList.remove('flipped');
+    updateCard();
+    updateCountryGrid();
+}
+
+function speakText(type) {
+    var c = filteredCountries[currentIndex];
+    var text = type === 'country' ? c.name : c.capital;
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        var utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'de-DE';
+        utterance.rate = 0.75;
+        window.speechSynthesis.speak(utterance);
+    } else {
+        alert('Ihr Browser unterstützt keine Sprachsynthese.');
+    }
+}
+
+function updateCountryGrid() {
+    var grid = document.getElementById('countryGrid');
+    grid.innerHTML = '';
+    for (var i = 0; i < filteredCountries.length; i++) {
+        var c = filteredCountries[i];
+        var thumb = document.createElement('div');
+        thumb.className = 'country-thumb';
+        thumb.innerHTML = '<span class="code">' + c.name.substring(0,3) + '</span>';
+        thumb.onclick = (function(index) { return function() { goToCard(index); }; })(i);
+        grid.appendChild(thumb);
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight') nextCard();
+    else if (e.key === 'ArrowLeft') prevCard();
+    else if (e.key === ' ') { e.preventDefault(); flipCard(); }
+});
+
+updateCard();
+updateCountryGrid();
+    </script>
+</body>
+</html>
